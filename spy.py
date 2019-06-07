@@ -1,9 +1,15 @@
+import os
+
 from bs4 import BeautifulSoup
 from contextlib import closing
 from requests import get
 from requests.exceptions import RequestException
 from datetime import datetime
+import smtplib
 
+SHOWS_URL = 'http://www.comedybar.co.il/show.php?id=52'
+USER_ENV_VAR = 'hason_user_name'
+PASS_ENV_VAR = 'hason_password'
 
 def is_good_response(resp):
     """
@@ -60,8 +66,7 @@ def set_date(date):
 
 def check_new_shows():
     """Check whether new shows of Shahar Hason is published"""
-    url = 'http://www.comedybar.co.il/show.php?id=52'
-    raw_html = simple_get(url)
+    raw_html = simple_get(SHOWS_URL)
 
     if raw_html is None:
         print('Could not get url')
@@ -76,11 +81,37 @@ def check_new_shows():
         return True
     return False
 
+def get_mail_information():
+    """Retrieve the sender mail user name and password that are set locally with environment variables"""
+    try:
+        user = os.environ[USER_ENV_VAR]
+        password = os.environ[PASS_ENV_VAR]
+        return user, password
+    except KeyError:
+        print("Could not retrieve sender mail information."
+              " Please make sure your environment variable are set correctly.")
+
 
 def notify():
-    pass
+    """Send an email"""
+    server = smtplib.SMTP('smtp.gmail.com:587')
+    server.ehlo()
+    server.starttls()
+    user, password = get_mail_information()
+
+    server.login(user, password)
+    receivers = ["spamail12381@gmail.com"]
+    msg = "\r\n".join([
+        "From: {}".format(user),
+        "To: {}".format(" ".join(receivers)),
+        "Subject: New Shahar Hason show is open!",
+        "",
+        "You can book a ticket here: {}".format(SHOWS_URL)
+    ])
+    server.sendmail(user, receivers, msg)
+    server.close()
 
 
 if __name__ == '__main__':
-    # if check_new_shows():
-    notify()
+    if check_new_shows():
+        notify()
