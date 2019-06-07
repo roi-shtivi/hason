@@ -1,5 +1,6 @@
-import os
+#!/usr/bin/env python3
 
+import os
 from bs4 import BeautifulSoup
 from contextlib import closing
 from requests import get
@@ -10,6 +11,7 @@ import smtplib
 SHOWS_URL = 'http://www.comedybar.co.il/show.php?id=52'
 USER_ENV_VAR = 'hason_user_name'
 PASS_ENV_VAR = 'hason_password'
+
 
 def is_good_response(resp):
     """
@@ -87,18 +89,20 @@ def get_mail_information():
         user = os.environ[USER_ENV_VAR]
         password = os.environ[PASS_ENV_VAR]
         return user, password
-    except KeyError:
+    except Exception:
         print("Could not retrieve sender mail information."
               " Please make sure your environment variable are set correctly.")
-
+        return None
 
 def notify():
     """Send an email"""
     server = smtplib.SMTP('smtp.gmail.com:587')
     server.ehlo()
     server.starttls()
-    user, password = get_mail_information()
-
+    info =  get_mail_information()
+    if info is None:
+        return
+    user, password = info
     server.login(user, password)
     receivers = ["spamail12381@gmail.com"]
     msg = "\r\n".join([
