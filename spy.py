@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 
 import os
-from bs4 import BeautifulSoup
+import smtplib
+from datetime import datetime
 from contextlib import closing
 from requests import get
+
 from requests.exceptions import RequestException
-from datetime import datetime
-import smtplib
+from bs4 import BeautifulSoup
 
 SHOWS_URL = 'http://www.comedybar.co.il/show.php?id=52'
 USER_ENV_VAR = 'hason_user_name'
 PASS_ENV_VAR = 'hason_password'
+EPOCH = datetime(1, 1, 1, 0, 0)
 
 
 def is_good_response(resp):
@@ -46,7 +48,7 @@ def get_date():
     Get the latest show date that is already known and saved in date.txt file,
     if no such file is exist, return the date of epoch.
     """
-    latest_known_show_date = datetime(1, 1, 1, 0, 0)
+    latest_known_show_date = EPOCH
     try:
         with open("date.txt", "r") as f:
             str_file_time = f.read()
@@ -77,11 +79,14 @@ def check_new_shows():
     html = BeautifulSoup(raw_html, 'html.parser')
     shows_date_containers = html.select(".show_appearances_list_field_content_date")
     dates = [datetime.strptime(d.contents[0], '%d/%m/%Y') for d in shows_date_containers]
+    known_date = get_date()
     max_date = max(dates)
-    if max_date > get_date():
+    if max_date > known_date:
         set_date(max_date)
-        return True
+        if known_date != EPOCH:
+            return True
     return False
+
 
 def get_mail_information():
     """Retrieve the sender mail user name and password that are set locally with environment variables"""
@@ -94,12 +99,13 @@ def get_mail_information():
               " Please make sure your environment variable are set correctly.")
         return None
 
+
 def notify():
     """Send an email"""
     server = smtplib.SMTP('smtp.gmail.com:587')
     server.ehlo()
     server.starttls()
-    info =  get_mail_information()
+    info = get_mail_information()
     if info is None:
         return
     user, password = info
