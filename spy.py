@@ -10,8 +10,8 @@ from requests.exceptions import RequestException
 from bs4 import BeautifulSoup
 
 SHOWS_URL = 'http://www.comedybar.co.il/show.php?id=52'
-USER_ENV_VAR = 'hason_user_name'
-PASS_ENV_VAR = 'hason_password'
+USER_ENV_VAR = 'hason_email_user_name'
+PASS_ENV_VAR = 'hason_email_password'
 EPOCH = datetime(1, 1, 1, 0, 0)
 
 
@@ -102,7 +102,7 @@ def get_mail_information():
 
 def notify():
     """Send an email"""
-    server = smtplib.SMTP('smtp.gmail.com:587')
+    server = smtplib.SMTP('mail.shtivi.xyz:587')
     server.ehlo()
     server.starttls()
     info = get_mail_information()
@@ -110,7 +110,7 @@ def notify():
         return
     user, password = info
     server.login(user, password)
-    receivers = ["spamail12381@gmail.com"]
+    receivers = ["roi@shtivi.xyz"]
     msg = "\r\n".join([
         "From: {}".format(user),
         "To: {}".format(" ".join(receivers)),
