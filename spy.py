@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import os
 import smtplib
@@ -52,7 +52,7 @@ def get_date():
     try:
         with open("date.txt", "r") as f:
             str_file_time = f.read()
-            file_date = datetime.strptime(str_file_time, '%d/%m/%Y')
+            file_date = datetime.strptime(str_file_time.strip(), '%d/%m/%Y')
             latest_known_show_date = file_date if file_date > latest_known_show_date else latest_known_show_date
     except IOError:
         pass
